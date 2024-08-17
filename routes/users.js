@@ -1,9 +1,24 @@
 import express from "express";
 import db from "../db.js";
+import multer from 'multer';
+import path from 'path';
 
 const router = express.Router();
 
-router.post("/create", (req, res) => {
+// Set up multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); 
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + "_" +  Date.now() + path.extname(file.originalname)); 
+  },
+});
+
+const upload = multer({ storage });
+
+router.post("/create",  upload.single('image'), (req, res) => {
+  
   const {
     fname,
     lname,
@@ -12,11 +27,12 @@ router.post("/create", (req, res) => {
     age,
     designation,
     department,
-    image,
     country,
     city,
     address,
   } = req.body;
+
+  
 
   if (
     !fname ||
@@ -26,13 +42,15 @@ router.post("/create", (req, res) => {
     !department ||
     !guardian ||
     !age ||
-    !image ||
+    !req.file ||
     !country ||
     !city ||
     !address
   ) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
+
+  const image = req.file.filename;
 
   const sqlQuery = `
     INSERT INTO users 
