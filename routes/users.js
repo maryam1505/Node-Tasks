@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+
+// Creating a user
 router.post("/create",  upload.single('image'), (req, res) => {
   
   const {
@@ -84,6 +86,8 @@ router.post("/create",  upload.single('image'), (req, res) => {
   });
 });
 
+
+// Getting all users
 router.get("/get", (req, res) => {
   const sqlQuery = "SELECT * FROM users";
 
@@ -97,7 +101,27 @@ router.get("/get", (req, res) => {
   });
 });
 
-router.put("/update/:id", (req, res) => {
+// Getting user by id
+router.get("/get/:id", (req, res) => {
+  const userId = req.params.id; 
+  const sqlQuery = "SELECT * FROM users WHERE id = ?"; 
+
+  db.query(sqlQuery, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching user:", err.message);
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    // Check if a user was found
+    if (results.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(results[0]); 
+  });
+});
+
+router.put("/update/:id", upload.single('image'), (req, res) => {
   const userId = req.params.id;
   const {
     fname,
@@ -107,11 +131,12 @@ router.put("/update/:id", (req, res) => {
     age,
     designation,
     department,
-    image,
     country,
     city,
     address,
   } = req.body;
+  
+  const image = req.file ? req.file.filename : req.body.existingImage;
 
   if (
     !fname ||
