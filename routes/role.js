@@ -16,14 +16,14 @@ router.get("/roles", (req, res) => {
 });
 
 router.post("/create_role", (req, res) => {
-  const { role_name } = req.body;
+  const { title, description } = req.body;
 
-  if (!role_name) {
-    return res.status(400).json({ error: "role_name is required" });
+  if (!title || !description) {
+    return res.status(400).json({ error: "All fields are required" });
   }
 
-  const sql = "INSERT INTO roles (role_name) VALUES (?)";
-  db.query(sql, [role_name], (err, results) => {
+  const sql = "INSERT INTO roles (title,description) VALUES (?,?)";
+  db.query(sql, [title, description], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -53,14 +53,14 @@ router.delete("/delete_role/:id", (req, res) => {
 
 router.put("/update_role/:id", (req, res) => {
   const roleId = req.params.id;
-  const { role_name } = req.body;
+  const { title, description } = req.body;
 
-  if (!role_name) {
-    return res.status(400).json({ error: "role_name is required" });
+  if (!title) {
+    return res.status(400).json({ error: "title is required" });
   }
 
-  const sql = "UPDATE roles SET role_name = ? WHERE id = ?";
-  db.query(sql, [role_name, roleId], (err, results) => {
+  const sql = "UPDATE roles SET title = ?, description = ? WHERE id = ?";
+  db.query(sql, [title, roleId, description], (err, results) => {
     if (err) {
       console.error("Error updating role:", err.message);
       return res.status(500).json({ message: "Server error" });
