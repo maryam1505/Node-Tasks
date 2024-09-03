@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db.js";
 import multer from 'multer';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const upload = multer({ storage });
 
 
 // Creating a user
-router.post("/create",  upload.single('image'), (req, res) => {
+router.post("/create",  upload.single('image'), async (req, res) => {
   
   const {
     fname,
@@ -32,9 +33,9 @@ router.post("/create",  upload.single('image'), (req, res) => {
     country,
     city,
     address,
+    email,
+    password,
   } = req.body;
-
-  
 
   if (
     !fname ||
@@ -47,17 +48,21 @@ router.post("/create",  upload.single('image'), (req, res) => {
     !req.file ||
     !country ||
     !city ||
-    !address
+    !address ||
+    !email ||
+    !password
   ) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const image = req.file.filename;
 
   const sqlQuery = `
     INSERT INTO users 
-    (fname, lname, guardian, dob, age, designation, department, image, country, city, address, created_at, updated_at) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    (fname, lname, guardian, dob, age, designation, department, image, country, city, address, email, password, created_at, updated_at) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW())
   `;
 
   const values = [
@@ -72,6 +77,8 @@ router.post("/create",  upload.single('image'), (req, res) => {
     country,
     city,
     address,
+    email,
+    hashedPassword,
   ];
 
   db.query(sqlQuery, values, (err, results) => {
@@ -121,7 +128,7 @@ router.get("/get/:id", (req, res) => {
   });
 });
 
-router.put("/update/:id", upload.single('image'), (req, res) => {
+router.put("/update/:id", upload.single('image'), async (req, res) => {
   const userId = req.params.id;
   const {
     fname,
@@ -134,9 +141,12 @@ router.put("/update/:id", upload.single('image'), (req, res) => {
     country,
     city,
     address,
+    email,
+    password,
   } = req.body;
   
   const image = req.file ? req.file.filename : req.body.existingImage;
+
 
   if (
     !fname ||
@@ -149,15 +159,15 @@ router.put("/update/:id", upload.single('image'), (req, res) => {
     !image ||
     !country ||
     !city ||
-    !address
+    !address ||
+    !email 
   ) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
 
-  const sqlQuery = `
+  let sqlQuery = `
     UPDATE users
-    SET fname = ?, lname = ?, guardian = ?, dob = ?, age = ?, designation = ?, department = ?, image = ?, country = ?, city = ?, address = ?, updated_at = NOW()
-    WHERE id = ?
+    SET fname = ?, lname = ?, guardian = ?, dob = ?, age = ?, designation = ?, department = ?, image = ?, country = ?, city = ?, address = ?, email = ?, updated_at = NOW()
   `;
 
   const values = [
@@ -174,6 +184,14 @@ router.put("/update/:id", upload.single('image'), (req, res) => {
     address,
     userId,
   ];
+
+  if (password) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    sqlQuery += `, password = ?`;
+    values.splice(values.length - 1, 0, hashedPassword); 
+  }
+
+  sqlQuery += ` WHERE id = ?`;
 
   db.query(sqlQuery, values, (err, results) => {
     if (err) {
