@@ -1,7 +1,7 @@
 import db from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 export const login = (req, res) => {
@@ -27,11 +27,30 @@ export const login = (req, res) => {
         return res.status(401).json({ error: "Incorrect Password" });
       }
 
+      // Fetch user roles
+      const rolesQuery = `
+        SELECT r.title 
+        FROM roles r 
+        INNER JOIN user_roles ur ON ur.role_id = r.id 
+        WHERE ur.user_id = ?
+      `;
+
+      const roles = roleResults.map((role) => role.title);
+
       const token = jwt.sign(
-        { id: user.id, email: user.email },
+        { id: user.id, email: user.email, roles },
         "jwtSecretKey",
         { expiresIn: "1h" }
       );
+
+      // Store user information in session
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        roles,
+        fullName: `${user.fname} ${user.lname}`,
+        profileImage: user.image,
+      };
 
       res.json({ message: "Login successful", token });
     });
