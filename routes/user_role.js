@@ -26,6 +26,7 @@ router.get("/fetch_UserRole/:id", (req, res) => {
       res.status(200).json({ results });
     });
 });
+
 router.post("/assign_UserRole", (req, res) => {
   const { userId, roleId } = req.body;
 
@@ -58,20 +59,4 @@ router.delete("/delete_UserRole", (req, res) => {
   });
 });
 
-router.get("/get_UserRoles/:userId", (req, res) => {
-  const userId = req.params.userId;
-
-  const sql = `
-    SELECT roles.role_name
-    FROM user_roles
-    JOIN roles ON user_roles.role_id = roles.id
-    WHERE user_roles.user_id = ?
-  `;
-  db.query(sql, [userId], (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.status(200).json(results);
-  });
-});
 export default router;

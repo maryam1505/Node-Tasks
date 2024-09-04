@@ -62,3 +62,13 @@ export const login = (req, res) => {
 export const logout = (req, res) => {
   res.json({ message: "Logged out successfully!" });
 };
+
+export const session = (req,res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const { id, email, roles, fullName, profileImage } = req.session.user;
+  
+  res.json({ id, email, roles, fullName, profileImage });
+};
