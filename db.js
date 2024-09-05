@@ -1,6 +1,5 @@
 import mysql from "mysql2";
-import session from "express-session";
-import MySQLSession from "express-mysql-session";
+// import MySQLStore from "express-mysql-session";
 
 const db = mysql.createConnection({
   host: "localhost",
@@ -18,5 +17,7 @@ db.connect((err) => {
   }
   console.log("Connected to the MySQL database.");
 });
+
+// export const sessionStore = new MySQLStore({}, db);
 
 export default db;

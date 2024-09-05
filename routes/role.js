@@ -3,7 +3,7 @@ import db from "../db.js";
 
 const router = express.Router();
 
-router.get("/roles", (req, res) => {
+router.get("/get", (req, res) => {
   const sql = "SELECT * FROM roles";
   db.query(sql, (err, results) => {
     if (err) {
@@ -15,7 +15,7 @@ router.get("/roles", (req, res) => {
   });
 });
 
-router.post("/create_role", (req, res) => {
+router.post("/create", (req, res) => {
   const { title, description } = req.body;
 
   if (!title || !description) {
@@ -33,7 +33,7 @@ router.post("/create_role", (req, res) => {
   });
 });
 
-router.delete("/delete_role/:id", (req, res) => {
+router.delete("/delete/:id", (req, res) => {
   const roleId = req.params.id;
 
   const sql = "DELETE FROM roles WHERE id = ?";
@@ -51,7 +51,7 @@ router.delete("/delete_role/:id", (req, res) => {
   });
 });
 
-router.put("/update_role/:id", (req, res) => {
+router.put("/update/:id", (req, res) => {
   const roleId = req.params.id;
   const { title, description } = req.body;
 
